@@ -10,7 +10,7 @@
 :root{--bg:#efe3d8;--card:#f8f1ea;--terra:#b8715c;--brown:#7a4a33;--olive:#8a8677;--ink:#4a2e20;--line:#d9c6b6}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 'Work Sans',sans-serif}
-main{max-width:640px;margin:0 auto;padding:20px 16px 64px}
+main{max-width:980px;margin:0 auto;padding:20px 16px 64px}
 h1{font-family:Marcellus,serif;font-weight:400;color:var(--brown);font-size:28px;margin:0 0 12px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
@@ -26,6 +26,14 @@ select{width:auto;margin:0}
 .p{border-top:1px solid var(--line);margin-top:10px;padding-top:10px}
 .acts{display:flex;gap:6px;flex-wrap:wrap}
 #msg{position:fixed;top:12px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:608px;z-index:9;background:#fff;border:1px solid var(--terra);border-radius:12px;padding:12px 16px;box-shadow:0 4px 16px rgba(74,46,32,.25)}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:12px}
+.dc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px;min-height:80px}
+.dc h4{margin:0 0 6px;font:600 13px 'Work Sans',sans-serif;color:var(--brown);text-align:center;text-transform:capitalize}
+.dc.today{border:2px solid var(--terra)}
+.chip{display:block;width:100%;text-align:left;border-radius:10px;padding:6px 8px;margin-bottom:5px;font-size:12px;font-weight:600;line-height:1.3;background:#fff;color:var(--ink);border:1px solid var(--line)}
+.chip.some{background:#f1dfd5}.chip.full{background:var(--terra);color:#fff;border-color:var(--terra)}.chip.sel{outline:3px solid var(--brown)}
+.vt{display:flex;gap:8px;margin-bottom:10px}.vt button{flex:1}
+@media(max-width:700px){.wk{grid-template-columns:1fr}.dc.empty{display:none}}
 </style>
 </head>
 <body>
@@ -54,9 +62,14 @@ select{width:auto;margin:0}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 // Pega aquí los MISMOS datos que en reservas.html (Supabase > Project Settings > API)
-const SUPABASE_URL = 'https://mdjfgkbaillpwwmfvgni.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kamZna2JhaWxscHd3bWZ2Z25pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzNDI0NzIsImV4cCI6MjEwOTkxODQ3Mn0.E3w0MZzkaOJbRcQcC4uXvYXd3etgND3qQw_kmV_TJ50';
+cconst SUPABASE_URL = 'https://mdjfgkbaillpwwmfvgni.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kamZna2JhaWxscHd3bWZ2Z25pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzNDI0NzIsImV4cCI6MjEwOTkxODQ3Mn0.E3w0MZzkaOJbRcQcC4uXvYXd3etgND3qQw_kmV_TJ50';;
 
+if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(SUPABASE_URL) || SUPABASE_KEY.includes('PEGA_AQUI')) {
+  const m = document.getElementById('msg');
+  m.textContent = 'Faltan las claves de Supabase, o están mal pegadas, en admin.html (SUPABASE_URL y SUPABASE_KEY). El URL debe verse así: https://abcdefgh.supabase.co';
+  m.classList.remove('hidden'); throw new Error('claves');
+}
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -91,19 +104,61 @@ async function load(){
   const [c, s] = await Promise.all([sb.rpc('admin_classes'), sb.rpc('admin_students')]);
   if (c.error || s.error) return say('Error: ' + (c.error || s.error).message);
   students = s.data || [];
-  $('v1').innerHTML = (c.data || []).map(k => {
-    const ppl = k.people || [], n = ppl.length;
-    return `<div class="card"><div class="row"><b>${esc(k.name)}</b><span class="tag">${n}/${k.capacity}</span></div>
-      <span class="muted">${esc(fmt(k.starts_at))}</span>` +
-      (n ? ppl.map(p => `<div class="p"><div class="row"><div>${esc(p.name || p.email)}${p.trial ? ' <span class="tag">prueba</span>' : ''}<br>
-        <span class="muted">${esc(p.email)} · ${ST[p.status]}</span></div>
-        <div class="acts">${p.status === 'booked'
-          ? `<button data-b="${p.booking_id}" data-s="attended">Asistió</button><button class="alt" data-b="${p.booking_id}" data-s="no_show">No llegó</button><button class="alt" data-b="${p.booking_id}" data-s="cancelled" data-ask="1">Quitar</button>`
-          : `<button class="alt" data-b="${p.booking_id}" data-s="booked">Deshacer</button>`}</div></div></div>`).join('')
-        : '<p class="muted" style="margin:8px 0 0">Sin reservas todavía.</p>') + '</div>';
-  }).join('') || '<p class="muted">No hay clases próximas.</p>';
+  classes = c.data || []; renderClasses();
   renderStudents();
 }
+
+let classes = [], view = 'week', wk = null, openId = null, showPast = false;
+const TZK = d => new Date(d).toLocaleDateString('en-CA', {timeZone:TZ});
+const hhmm = d => new Date(d).toLocaleTimeString('es-MX', {timeZone:TZ, hour:'numeric', minute:'2-digit'});
+function addDays(k, n){ const d = new Date(k + 'T12:00:00'); d.setDate(d.getDate() + n);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function monday(k){ const g = new Date(k + 'T12:00:00').getDay(); return addDays(k, -((g + 6) % 7)); }
+
+function cardHTML(k){
+  const ppl = k.people || [], n = ppl.length;
+  return `<div class="card"><div class="row"><b>${esc(k.name)}</b><span class="tag">${n}/${k.capacity}</span></div>
+    <span class="muted">${esc(fmt(k.starts_at))}</span>` +
+    (n ? ppl.map(p => `<div class="p"><div class="row"><div>${esc(p.name || p.email)}${p.trial ? ' <span class="tag">prueba</span>' : ''}<br>
+      <span class="muted">${esc(p.email)} · ${ST[p.status]}</span></div>
+      <div class="acts">${p.status === 'booked'
+        ? `<button data-b="${p.booking_id}" data-s="attended">Asistió</button><button class="alt" data-b="${p.booking_id}" data-s="no_show">No llegó</button><button class="alt" data-b="${p.booking_id}" data-s="cancelled" data-ask="1">Quitar</button>`
+        : `<button class="alt" data-b="${p.booking_id}" data-s="booked">Deshacer</button>`}</div></div></div>`).join('')
+      : '<p class="muted" style="margin:8px 0 0">Sin reservas todavía.</p>') + '</div>';
+}
+
+function renderClasses(){
+  if (!wk) wk = monday(TZK(new Date()));
+  const tb = `<div class="vt"><button class="${view==='week'?'':'alt'}" data-view="week">Semana</button><button class="${view==='list'?'':'alt'}" data-view="list">Lista</button></div>`;
+  if (view === 'list') {
+    const now = Date.now(), up = classes.filter(c => new Date(c.starts_at) >= now), past = classes.filter(c => new Date(c.starts_at) < now).reverse();
+    $('v1').innerHTML = tb + (up.map(cardHTML).join('') || '<p class="muted">No hay clases próximas.</p>') +
+      `<p style="text-align:center"><button class="alt" data-past="1">${showPast ? 'Ocultar clases pasadas' : 'Ver clases pasadas (' + past.length + ')'}</button></p>` + (showPast ? past.map(cardHTML).join('') : '');
+    return; }
+  const days = [0,1,2,3,4,5,6].map(i => addDays(wk, i)), today = TZK(new Date());
+  const dm = k => new Date(k + 'T12:00:00').toLocaleDateString('es-MX', {day:'numeric', month:'short'});
+  const nav = `<div class="row" style="margin-bottom:6px"><button class="alt" data-wk="-1">‹ Anterior</button><b>${dm(days[0])} – ${dm(days[6])}</b><button class="alt" data-wk="1">Siguiente ›</button></div>
+    <p style="text-align:center;margin:0 0 10px"><button class="alt" data-wk="0">Ir a hoy</button></p>`;
+  const cols = days.map(k => {
+    const cs = classes.filter(c => TZK(c.starts_at) === k);
+    const h = new Date(k + 'T12:00:00').toLocaleDateString('es-MX', {weekday:'short', day:'numeric'});
+    return `<div class="dc${k === today ? ' today' : ''}${cs.length ? '' : ' empty'}"><h4>${h}</h4>` + cs.map(c => {
+      const n = (c.people || []).length;
+      return `<button class="chip${n >= c.capacity ? ' full' : n ? ' some' : ''}${c.id === openId ? ' sel' : ''}" data-open="${c.id}">${hhmm(c.starts_at)}<br>${esc(c.name)}<br>${n}/${c.capacity}</button>`;
+    }).join('') + '</div>';
+  }).join('');
+  const open = classes.find(c => c.id === openId);
+  $('v1').innerHTML = tb + nav + `<div class="wk">${cols}</div>` +
+    (open ? `<div id="det">${cardHTML(open)}</div>` : '<p class="muted" style="text-align:center">Toca una clase para ver quién viene y pasar lista.</p>');
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.view) { view = b.dataset.view; renderClasses(); }
+  if (b.dataset.past) { showPast = !showPast; renderClasses(); }
+  if (b.dataset.wk !== undefined) { wk = b.dataset.wk === '0' ? monday(TZK(new Date())) : addDays(wk, 7 * (+b.dataset.wk)); renderClasses(); }
+  if (b.dataset.open) { openId = openId === b.dataset.open ? null : b.dataset.open; renderClasses();
+    setTimeout(() => { const d = document.getElementById('det'); if (d) d.scrollIntoView({behavior:'smooth', block:'nearest'}); }); }
+});
 
 function renderStudents(){
   const q = $('q').value.toLowerCase();
@@ -129,7 +184,7 @@ document.addEventListener('click', async e => {
     say(error ? error.message : 'Paquete cargado ✓'); load();
   }
 });
-boot();
+boot().catch(e => say('Error: ' + (e.message || e)));
 </script>
 </body>
 </html>
