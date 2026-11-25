@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nuevo Ritmo 21 · Yoga con Ximena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#efe3d8;--card:#f8f1ea;--terra:#b8715c;--brown:#7a4a33;--olive:#8a8677;--ink:#4a2e20;--line:#d9c6b6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 'Work Sans',sans-serif}
+main{max-width:560px;margin:0 auto;padding:24px 16px 64px}
+h1,h2{font-family:Marcellus,serif;font-weight:400;color:var(--brown);margin:0}
+h1{font-size:30px;text-align:center}
+h2{font-size:22px;margin:28px 0 12px}
+.sub{text-align:center;margin:4px 0 24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+.card p{margin:8px 0}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.muted{color:var(--olive);font-size:14px}
+button,a.btn{font:inherit;font-weight:600;border:0;border-radius:999px;padding:10px 18px;background:var(--terra);color:#fff;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+button.alt{background:transparent;color:var(--brown);border:1px solid var(--brown)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--brown);outline-offset:2px}
+input,textarea,select{font:inherit;width:100%;padding:12px 14px;margin:6px 0;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+.tabs{display:flex;gap:6px;margin:20px 0 12px}
+.tabs button{flex:1;padding:10px 4px;font-size:14px;background:transparent;color:var(--brown);border:1px solid var(--line)}
+.tabs button.on{background:var(--brown);color:#fff}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:0 0 16px}
+.days button{padding:8px 0;border-radius:12px;background:transparent;color:var(--brown);border:1px solid var(--line)}
+.days button.has{border-color:var(--terra)}
+.days button.on{background:var(--terra);color:#fff;border-color:var(--terra)}
+.big{font-family:Marcellus,serif;font-size:44px;color:var(--terra);line-height:1}
+.chk{display:flex;gap:12px;align-items:center;padding:8px 0}
+.chk input{width:22px;height:22px;margin:0;accent-color:var(--terra)}
+.msg{position:fixed;top:12px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:528px;z-index:10;padding:12px 16px;border-radius:12px;background:#fff;border:1px solid var(--terra);box-shadow:0 4px 16px rgba(74,46,32,.25)}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<main>
+  <a href="index.html" style="color:var(--brown);font-weight:600;text-decoration:none">← Volver al inicio</a>
+  <h1>Nuevo Ritmo 21</h1>
+  <p class="sub muted">Nuevo ritmo, nuevos hábitos</p>
+  <div id="msg" class="msg hidden" role="status"></div>
+
+  <section id="login" class="card hidden">
+    <h2 style="margin-top:0">Entra con tu cuenta</h2>
+    <p>Usa la misma cuenta con la que reservas tus clases. Después de entrar, vuelve a esta página.</p>
+    <a class="btn" href="reservas.html">Entrar o crear cuenta</a>
+  </section>
+
+  <section id="app" class="hidden">
+    <div class="row"><span id="hello" class="muted"></span><button id="out" class="alt">Salir</button></div>
+    <div id="gate" class="card hidden" style="margin-top:16px">
+      <h2 style="margin-top:0">Aún no tienes acceso al reto</h2>
+      <p>Cuando hayas pagado, Ximena activa tu acceso. Escríbele por WhatsApp y vuelve a entrar.</p>
+      <a class="btn" href="https://wa.me/523335778317" target="_blank" rel="noopener">Escribir a Ximena</a>
+    </div>
+    <div id="main" class="hidden">
+      <div class="tabs" id="tabs"></div>
+      <div id="days" class="days"></div>
+      <div id="v"></div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+// Pega aquí los MISMOS dos datos que tienes en reservas.html
+const SUPABASE_URL = 'PEGA_AQUI_TU_PROJECT_URL';
+const SUPABASE_KEY = 'PEGA_AQUI_TU_ANON_PUBLIC_KEY';
+
+const PID = 'nuevo-ritmo-21', START = '2027-01-04', TZ = 'America/Mexico_City';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function say(t){ const m=$('msg'); m.textContent=t; m.classList.toggle('hidden',!t); if(t) setTimeout(()=>m.classList.add('hidden'),6000); }
+
+const WEEKS = ['Encuentra tu ritmo','Gana ritmo','Hazlo tuyo'];
+const MINI = ['Caminata de 20 min','Sin bebidas azucaradas','Ritual de sueño completo'];
+const FUERZA = ['Fuerza A','Caminata de 20 min','Fuerza B','Caminata de 20 min','Fuerza C','Actividad libre','Descanso'];
+const LIVE = 'Clase en vivo (jueves por la noche)';
+const YOGA = [
+ ['Despertar 10 min','Caderas 20 min','Movilidad 10 min',LIVE,'Movilidad después de fuerza','Flow suave 25 min','Restaurativo 30 min'],
+ ['Despertar 10 min','Espalda y hombros 20 min','Movilidad 10 min',LIVE,'Movilidad después de fuerza','Flow 30 min','Restaurativo 30 min'],
+ ['Despertar 10 min','Caderas 20 min','Movilidad 10 min',LIVE,'Movilidad después de fuerza','Flow 30 min','Restaurativo 30 min']];
+const MED = ['Llegar: respiración consciente','Intención del reto','Escaneo corporal','Respiración 4-6 para dormir','Gratitud','Soltar el día','Revisión de la semana','Enfocar la mente antes de entrenar','Observar pensamientos','Hambre y saciedad','Calma en la tensión','Compasión con uno mismo','Mi mejor semana','Revisión de la semana 2','Presencia en el movimiento','Manejo de antojos','Energía y vitalidad','Agradecer al cuerpo','Orgullo por lo logrado','Mi vida después del reto','Cierre y compromiso'];
+const FOCO = ['Registrar tu punto de partida','Plato base','Agua primero','Hora fija de dormir','Proteína en las comidas','Disfrutar sin culpa','Check-in en vivo y planear la semana 2','Sin bebidas azucaradas','Proteína en el desayuno','Comer con atención','Ritual de sueño de 20 min','Aprender de lo que costó','Comer fuera con el plato base','Check-in en vivo y planear la semana 3','Ritual de sueño completo','Pantallas fuera 30 min antes de dormir','Planear el súper','Revisar qué hábito costó más','Comparar con el día 1','Diseñar tu versión mínima','Cierre en vivo y siguiente paso'];
+const PREG = ['¿Por qué quiero hacer este reto, de verdad? ¿Qué quiero sentir el día 21?','¿Qué frenó mis intentos anteriores y cómo lo voy a manejar esta vez?','¿Cómo se siente mi cuerpo hoy? Descríbelo con tres palabras.','¿Cuál es mi mejor momento del día para cumplir mis hábitos?','¿Qué tres cosas agradezco hoy?','¿Qué necesito soltar de esta semana?','Revisión de la semana 1: ¿qué fue fácil, qué me costó y qué logré que me da orgullo?','¿Qué voy a hacer diferente esta semana?','¿Cómo me hablo cuando fallo? ¿Cómo le hablaría a una amiga o a un amigo?','¿Qué comida me hace sentir bien de verdad, con energía y no solo por antojo?','¿Qué situación me estresó hoy y cómo respondí?','¿Qué ha cambiado en mi energía o en mi sueño?','¿Quién me apoya en esto y cómo se lo puedo agradecer?','Revisión de la semana 2: ¿qué hábito se siente más fácil y cuál sigo negociando conmigo?','¿Qué hábito ya se siente casi automático?','¿Qué antojo apareció y qué necesitaba en realidad?','¿Cómo quiero que sea mi día ideal dentro de un mes?','Escríbele unas líneas a tu cuerpo: ¿qué le agradeces?','¿Qué cambió entre el día 1 y hoy en mi fuerza, energía y ánimo?','¿Cuál es mi versión mínima para cuando la vida se complique?','Carta a mi yo de dentro de 3 meses: ¿qué quiero recordar y qué me prometo?'];
+const HAB = [['strength','Fuerza o movimiento del día'],['yoga','Yoga'],['meditation','Meditación'],['base_plate','Plato base'],['mini_challenge','Mini reto de la semana']];
+const GROUPS = [[['live'],'Clase en vivo'],[['class'],'Clases grabadas'],[['meditation'],'Meditaciones'],[['strength'],'Rutinas de fuerza'],[['kit','tool'],'Kit de herramientas']];
+
+let PREV=false, user, access=false, enrolled=false, items=[], jr={}, hb={}, sel=1, today=0, tab='hoy';
+const dayNum = () => Math.floor((Date.parse(new Date().toLocaleDateString('en-CA',{timeZone:TZ})) - Date.parse(START)) / 864e5) + 1;
+
+$('tabs').innerHTML = [['hoy','Hoy'],['cont','Contenido'],['diario','Diario'],['prog','Progreso']].map(([t,n]) => `<button data-t="${t}">${n}</button>`).join('');
+$('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.t; draw(); });
+$('out').onclick = async () => { await sb.auth.signOut(); start(); };
+
+const link = x => `<div class="card"><div class="row"><div><b>${esc(x.title)}</b>${x.description ? `<br><span class="muted">${esc(x.description)}</span>` : ''}</div>${/^https:\/\//.test(x.url||'') ? `<a class="btn" href="${esc(x.url)}" target="_blank" rel="noopener">${x.kind==='live'?'Unirme':'Abrir'}</a>` : ''}</div></div>`;
+
+function vHoy(){
+  if (today < 1) { const n = 1 - today; return `<div class="card"><div class="big">${n}</div><div class="muted">${n===1?'día':'días'} para empezar</div><p>El reto arranca el lunes 4 de enero. Mientras tanto, revisa la pestaña Contenido.</p></div>`; }
+  const i = sel-1, w = Math.floor(i/7), d = i%7;
+  const mover = FUERZA[d] + (sel===1 ? ' y test de fuerza' : sel===19 ? ' y retest de fuerza' : '');
+  const live = items.filter(x => x.kind==='live' && x.week===w+1), dia = items.filter(x => x.day===sel && x.kind!=='live');
+  return `<div class="card"><div class="muted">Semana ${w+1}: ${WEEKS[w]}</div><h2 style="margin:4px 0 12px">Día ${sel}</h2>
+    <p><b>Mover:</b> ${mover}</p><p><b>Yoga:</b> ${YOGA[w][d]}</p><p><b>Meditación:</b> ${MED[i]}</p><p><b>Foco:</b> ${FOCO[i]}</p><p><b>Mini reto:</b> ${MINI[w]}</p></div>`
+    + live.map(link).join('') + dia.map(link).join('')
+    + `<div class="card"><b>Pregunta del día</b><p class="muted">${PREG[i]}</p><button data-go="diario">Responder en mi diario</button></div>`;
+}
+function vCont(){
+  const out = GROUPS.map(([ks,t]) => {
+    const l = items.filter(x => ks.includes(x.kind));
+    if (!l.length && ks[0]!=='strength') return '';
+    return `<h2>${t}</h2>` + (l.length ? l.map(link).join('') : '<div class="card muted">Tus rutinas de fuerza están en AVENA. Ximena te avisará cómo entrar.</div>');
+  }).join('');
+  return out.includes('class="card"><div class="row"') ? out : out + '<p class="muted">Aún no hay contenido liberado. Se abre por semana.</p>';
+}
+function vDia(){
+  const ro = !access;
+  return `<div class="card"><div class="muted">Día ${sel}</div><p style="font-size:18px;margin:6px 0 10px"><b>${PREG[sel-1]}</b></p>
+    <textarea id="ans" rows="8" ${ro?'disabled':''} placeholder="Escribe aquí. Es privado: solo tú lo ves en esta página.">${esc(jr[sel]||'')}</textarea>
+    ${ro ? '' : '<button id="sv">Guardar</button>'}</div>`;
+}
+const opt = v => '<option value="">Elige</option>' + Array.from({length:10},(_,i) => `<option ${v===i+1?'selected':''}>${i+1}</option>`).join('');
+function vProg(){
+  const r = hb[sel]||{}, ro = !access, w = Math.floor((sel-1)/7);
+  const tot = k => Object.values(hb).filter(x => x[k]).length;
+  return `<div class="card"><div class="muted">Día ${sel}</div>`
+    + HAB.map(([k,t]) => `<label class="chk"><input type="checkbox" data-k="${k}" ${r[k]?'checked':''} ${ro?'disabled':''}>${k==='mini_challenge'?MINI[w]:t}</label>`).join('')
+    + `<label class="muted" for="sl">Horas de sueño</label><input id="sl" type="number" min="0" max="24" step="0.5" value="${r.sleep_hours ?? ''}" ${ro?'disabled':''}>
+    <label class="muted" for="en">Energía (1 a 10)</label><select id="en" ${ro?'disabled':''}>${opt(r.energy)}</select>
+    <label class="muted" for="mo">Ánimo (1 a 10)</label><select id="mo" ${ro?'disabled':''}>${opt(r.mood)}</select>
+    ${ro ? '' : '<button id="sv" style="margin-top:12px">Guardar</button>'}</div>
+    <h2>Mi avance</h2><div class="card"><p>Días con registro: <b>${Object.keys(hb).length}</b> de 21</p>`
+    + HAB.map(([k,t]) => `<p class="muted" style="margin:4px 0">${k==='mini_challenge'?'Mini retos':t}: ${tot(k)} ${tot(k)===1?'día':'días'}</p>`).join('') + '</div>';
+}
+
+async function saveJ(){
+  const a = $('ans').value;
+  const {error} = await sb.from('journal_entries').upsert({user_id:user.id, program_id:PID, day:sel, answer:a, updated_at:new Date().toISOString()}, {onConflict:'user_id,program_id,day'});
+  if (error) return say('No se pudo guardar: ' + error.message);
+  jr[sel] = a; say('Guardado ✓'); drawDays();
+}
+async function saveH(){
+  const row = {user_id:user.id, program_id:PID, day:sel, updated_at:new Date().toISOString(),
+    sleep_hours: $('sl').value==='' ? null : +$('sl').value, energy: +$('en').value || null, mood: +$('mo').value || null};
+  HAB.forEach(([k]) => row[k] = document.querySelector(`[data-k="${k}"]`).checked);
+  const {error} = await sb.from('habit_logs').upsert(row, {onConflict:'user_id,program_id,day'});
+  if (error) return say('No se pudo guardar: ' + error.message);
+  hb[sel] = row; say('Guardado ✓'); draw();
+}
+
+function drawDays(){
+  $('days').classList.toggle('hidden', tab==='cont');
+  $('days').innerHTML = Array.from({length:21}, (_,i) => { const n = i+1;
+    return `<button data-d="${n}" class="${n===sel?'on':''} ${jr[n]||hb[n]?'has':''}" ${n>today?'disabled':''} aria-label="Día ${n}">${n}</button>`; }).join('');
+  $('days').querySelectorAll('button').forEach(b => b.onclick = () => { sel = +b.dataset.d; draw(); });
+}
+function draw(){
+  $('tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t===tab));
+  drawDays();
+  $('v').innerHTML = (PREV ? '<div class="card"><b>Vista previa de administradora</b><br><span class="muted">Ves los 21 días y todo el contenido desbloqueado. Las participantes lo verán semana por semana.</span></div>' : '') + (access ? '' : '<div class="card">Tu acceso terminó. Puedes leer lo que escribiste, pero ya no editarlo.</div>') + {hoy:vHoy, cont:vCont, diario:vDia, prog:vProg}[tab]();
+  if ($('sv')) $('sv').onclick = tab==='diario' ? saveJ : saveH;
+  document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { tab = b.dataset.go; draw(); });
+}
+
+async function start(){ try { await run(); } catch(e) { console.error(e); say('Error al cargar: ' + (e.message || e)); } }
+async function run(){
+  const {data:{user:u}} = await sb.auth.getUser(); user = u;
+  if (!user) { $('login').classList.remove('hidden'); $('app').classList.add('hidden'); return; }
+  $('login').classList.add('hidden'); $('app').classList.remove('hidden');
+  const [ac, adm, en, ci, jo, hl, pf] = await Promise.all([
+    sb.rpc('has_access', {p_program:PID}), sb.rpc('is_admin'),
+    sb.from('enrollments').select('status').eq('user_id', user.id).eq('program_id', PID).maybeSingle(),
+    sb.from('content_items').select('*').eq('program_id', PID).order('day', {nullsFirst:true}).order('sort'),
+    sb.from('journal_entries').select('day,answer').eq('program_id', PID),
+    sb.from('habit_logs').select('*').eq('program_id', PID),
+    sb.from('profiles').select('name').maybeSingle()]);
+  if (ci.error) return say('No se pudo cargar el contenido: ' + ci.error.message);
+  access = ac.data===true || adm.data===true; enrolled = !!en.data;
+  items = ci.data || []; jr = {}; hb = {};
+  (jo.data||[]).forEach(r => jr[r.day] = r.answer); (hl.data||[]).forEach(r => hb[r.day] = r);
+  // Vista previa: solo para administradoras, con reto.html?preview=1
+  PREV = adm.data===true && new URLSearchParams(location.search).get('preview')==='1';
+  today = PREV ? 21 : dayNum(); sel = PREV ? 1 : (today < 1 ? 1 : Math.min(today, 21));
+  $('hello').textContent = 'Hola, ' + (pf.data?.name || user.email);
+  const ok = access || enrolled;
+  $('gate').classList.toggle('hidden', ok); $('main').classList.toggle('hidden', !ok);
+  if (ok) draw();
+}
+start();
+</script>
+</body>
+</html>
