@@ -11,9 +11,10 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 'Work Sans',sans-serif}
 main{max-width:560px;margin:0 auto;padding:24px 16px 64px}
-h1,h2{font-family:Marcellus,serif;font-weight:400;color:var(--brown);margin:0}
+h1,h2,h3{font-family:Marcellus,serif;font-weight:400;color:var(--brown);margin:0}
 h1{font-size:30px;text-align:center}
-h2{font-size:22px;margin:28px 0 12px}
+h2{font-size:22px;margin:24px 0 10px}
+h3{font-size:19px;margin:0 0 6px}
 .sub{text-align:center;margin:4px 0 24px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
 .card p{margin:8px 0}
@@ -22,19 +23,38 @@ h2{font-size:22px;margin:28px 0 12px}
 button,a.btn{font:inherit;font-weight:600;border:0;border-radius:999px;padding:10px 18px;background:var(--terra);color:#fff;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
 button.alt{background:transparent;color:var(--brown);border:1px solid var(--brown)}
 button:disabled{opacity:.5;cursor:default}
-button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--brown);outline-offset:2px}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--brown);outline-offset:2px}
 input,textarea,select{font:inherit;width:100%;padding:12px 14px;margin:6px 0;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
 .tabs{display:flex;gap:6px;margin:20px 0 12px}
 .tabs button{flex:1;padding:10px 4px;font-size:14px;background:transparent;color:var(--brown);border:1px solid var(--line)}
 .tabs button.on{background:var(--brown);color:#fff}
 .days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:0 0 16px}
 .days button{padding:8px 0;border-radius:12px;background:transparent;color:var(--brown);border:1px solid var(--line)}
-.days button.has{border-color:var(--terra)}
-.days button.on{background:var(--terra);color:#fff;border-color:var(--terra)}
-.big{font-family:Marcellus,serif;font-size:44px;color:var(--terra);line-height:1}
+.days .l1{background:#ecd3c7}.days .l2{background:#dfb2a1}.days .l3{background:#cf8f79;color:#fff}.days .l4{background:var(--terra);color:#fff;border-color:var(--terra)}
+.days .lm{background:#d6d4c8}.days .lj{border:2px dashed var(--terra)}
+.days .on{box-shadow:0 0 0 3px var(--brown)}
+.days button:disabled{opacity:.45}
 .chk{display:flex;gap:12px;align-items:center;padding:8px 0}
 .chk input{width:22px;height:22px;margin:0;accent-color:var(--terra)}
+.rings{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
+.rg svg{width:64px;height:64px;transform:rotate(-90deg)}
+.rg circle{fill:none;stroke-width:6}
+.rg .bg{stroke:var(--line)}
+.rg .fg{stroke:var(--terra);stroke-linecap:round;stroke-dasharray:157;stroke-dashoffset:157;transition:stroke-dashoffset .6s}
+.rg.on .fg{stroke-dashoffset:0}
+.rg span{display:block;font-size:13px;color:var(--olive)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:4px 12px;border-radius:999px;border:1px solid var(--line);font-size:14px;color:var(--olive)}
+.chip.on{background:var(--terra);border-color:var(--terra);color:#fff}
+.big{font-family:Marcellus,serif;font-size:44px;color:var(--terra);line-height:1}
+.af{font-family:Marcellus,serif;font-size:19px;color:var(--brown);margin:6px 0}
+audio{width:100%;margin:10px 0 4px}
+details{margin-top:8px}summary{cursor:pointer;font-weight:600;color:var(--brown)}
+.body p,.body ul{margin:8px 0}
 .msg{position:fixed;top:12px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:528px;z-index:10;padding:12px 16px;border-radius:12px;background:#fff;border:1px solid var(--terra);box-shadow:0 4px 16px rgba(74,46,32,.25)}
+.cel{position:fixed;inset:0;z-index:20;display:grid;place-items:center;text-align:center;padding:24px;pointer-events:none;font:44px/1.1 Marcellus,serif;color:var(--terra);background:rgba(239,227,216,.8);animation:pop 2.6s ease both}
+@keyframes pop{0%{opacity:0;transform:scale(.9)}15%,80%{opacity:1;transform:scale(1)}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .hidden{display:none}
 </style>
 </head>
@@ -77,39 +97,78 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function say(t){ const m=$('msg'); m.textContent=t; m.classList.toggle('hidden',!t); if(t) setTimeout(()=>m.classList.add('hidden'),6000); }
+function celebrate(t){ const c=document.createElement('div'); c.className='cel'; c.textContent=t; document.body.appendChild(c); setTimeout(()=>c.remove(),2600); }
 
 const WEEKS = ['Encuentra tu ritmo','Gana ritmo','Hazlo tuyo'];
 const MINI = ['Caminata de 20 min','Sin bebidas azucaradas','Ritual de sueño completo'];
+const RITUAL = ['Hora fija de despertar mañana','Ritual de 20 minutos antes de dormir','Pantallas fuera 30 minutos antes de dormir'];
 const FUERZA = ['Fuerza A','Caminata de 20 min','Fuerza B','Caminata de 20 min','Fuerza C','Actividad libre','Descanso'];
 const LIVE = 'Clase en vivo (jueves por la noche)';
 const YOGA = [
  ['Despertar 10 min','Caderas 20 min','Movilidad 10 min',LIVE,'Movilidad después de fuerza','Flow suave 25 min','Restaurativo 30 min'],
  ['Despertar 10 min','Espalda y hombros 20 min','Movilidad 10 min',LIVE,'Movilidad después de fuerza','Flow 30 min','Restaurativo 30 min'],
  ['Despertar 10 min','Caderas 20 min','Movilidad 10 min',LIVE,'Movilidad después de fuerza','Flow 30 min','Restaurativo 30 min']];
-const MED = ['Llegar: respiración consciente','Intención del reto','Escaneo corporal','Respiración 4-6 para dormir','Gratitud','Soltar el día','Revisión de la semana','Enfocar la mente antes de entrenar','Observar pensamientos','Hambre y saciedad','Calma en la tensión','Compasión con uno mismo','Mi mejor semana','Revisión de la semana 2','Presencia en el movimiento','Manejo de antojos','Energía y vitalidad','Agradecer al cuerpo','Orgullo por lo logrado','Mi vida después del reto','Cierre y compromiso'];
+const MED = ['Llegar a la noche: respiración consciente','Intención del reto','Escaneo corporal para dormir','Respiración 4-6 para dormir','Gratitud del día','Soltar el día','Revisión de la semana 1','Relajar el cuerpo después de entrenar','Observar pensamientos y dejarlos pasar','Hambre, saciedad y descanso','Calma en la tensión','Compasión con uno mismo','Visualización: mi mejor semana','Revisión de la semana 2','Descanso del cuerpo en movimiento','Antojos: qué necesito de verdad','Recargar energía mientras duermes','Agradecer al cuerpo','Orgullo por lo logrado','Mi vida después del reto','Cierre y compromiso'];
 const FOCO = ['Registrar tu punto de partida','Plato base','Agua primero','Hora fija de dormir','Proteína en las comidas','Disfrutar sin culpa','Check-in en vivo y planear la semana 2','Sin bebidas azucaradas','Proteína en el desayuno','Comer con atención','Ritual de sueño de 20 min','Aprender de lo que costó','Comer fuera con el plato base','Check-in en vivo y planear la semana 3','Ritual de sueño completo','Pantallas fuera 30 min antes de dormir','Planear el súper','Revisar qué hábito costó más','Comparar con el día 1','Diseñar tu versión mínima','Cierre en vivo y siguiente paso'];
-const PREG = ['¿Por qué quiero hacer este reto, de verdad? ¿Qué quiero sentir el día 21?','¿Qué frenó mis intentos anteriores y cómo lo voy a manejar esta vez?','¿Cómo se siente mi cuerpo hoy? Descríbelo con tres palabras.','¿Cuál es mi mejor momento del día para cumplir mis hábitos?','¿Qué tres cosas agradezco hoy?','¿Qué necesito soltar de esta semana?','Revisión de la semana 1: ¿qué fue fácil, qué me costó y qué logré que me da orgullo?','¿Qué voy a hacer diferente esta semana?','¿Cómo me hablo cuando fallo? ¿Cómo le hablaría a una amiga o a un amigo?','¿Qué comida me hace sentir bien de verdad, con energía y no solo por antojo?','¿Qué situación me estresó hoy y cómo respondí?','¿Qué ha cambiado en mi energía o en mi sueño?','¿Quién me apoya en esto y cómo se lo puedo agradecer?','Revisión de la semana 2: ¿qué hábito se siente más fácil y cuál sigo negociando conmigo?','¿Qué hábito ya se siente casi automático?','¿Qué antojo apareció y qué necesitaba en realidad?','¿Cómo quiero que sea mi día ideal dentro de un mes?','Escríbele unas líneas a tu cuerpo: ¿qué le agradeces?','¿Qué cambió entre el día 1 y hoy en mi fuerza, energía y ánimo?','¿Cuál es mi versión mínima para cuando la vida se complique?','Carta a mi yo de dentro de 3 meses: ¿qué quiero recordar y qué me prometo?'];
-const HAB = [['strength','Fuerza o movimiento del día'],['yoga','Yoga'],['meditation','Meditación'],['base_plate','Plato base'],['mini_challenge','Mini reto de la semana']];
-const GROUPS = [[['live'],'Clase en vivo'],[['class'],'Clases grabadas'],[['meditation'],'Meditaciones'],[['strength'],'Rutinas de fuerza'],[['kit','tool'],'Kit de herramientas']];
+const PM = ['¿Por qué quiero hacer este reto, de verdad? ¿Qué quiero sentir el día 21?','Hoy mi intención es… ¿Qué una cosa haría que hoy fuera un buen día?','¿Cómo amanece mi cuerpo hoy? Descríbelo con tres palabras.','¿A qué hora y en qué lugar voy a cumplir mis hábitos hoy?','Escribe tu propia afirmación para esta semana: ¿qué frase necesito escuchar?','¿Qué quiero disfrutar hoy sin culpa?','Hoy cierro la semana 1: ¿qué quiero celebrar y qué quiero ajustar para la próxima?','¿Qué voy a hacer diferente esta semana?','¿Cómo quiero hablarme hoy si algo no sale como espero?','¿Qué comida quiero que me dé energía hoy?','¿Qué podría estresarme hoy y cómo me quiero preparar?','¿Cómo dormí y cómo está mi energía esta mañana?','¿A quién puedo pedirle apoyo hoy o a quién puedo apoyar?','Cierre de la semana 2: ¿qué hábito ya fluye y cuál quiero reforzar?','¿Qué hábito ya se siente casi automático esta mañana?','Si hoy aparece un antojo, ¿qué voy a hacer primero?','¿Cómo quiero que sea mi día ideal hoy?','¿Qué parte de mi cuerpo quiero cuidar con más atención hoy?','¿Qué quiero comparar con mi día 1 cuando termine el día?','¿Cuál es mi versión mínima para hoy si se complica?','¿Qué quiero llevarme de estos 21 días y cómo quiero seguir?'];
+const PN = ['¿Qué fue lo mejor de mi primer día? ¿Cómo me sentí al cumplirlo?','¿Qué frenaba mis intentos anteriores y cómo lo manejé hoy?','¿Cómo se sintió mi cuerpo hoy después de moverlo?','¿Cuál fue mi mejor momento del día para cumplir mis hábitos?','¿Qué tres cosas agradezco hoy?','¿Qué necesito soltar antes de dormir?','Revisión de la semana 1: ¿qué fue fácil, qué me costó y qué logré que me da orgullo?','¿Qué hice diferente hoy y cómo me fue?','¿Cómo me hablé hoy cuando algo no salió perfecto?','¿Qué comida me hizo sentir bien de verdad hoy, con energía y no solo por antojo?','¿Qué situación me estresó hoy y cómo respondí?','¿Qué ha cambiado en mi energía o en mi sueño?','¿Quién me apoya en esto y cómo se lo puedo agradecer?','Revisión de la semana 2: ¿qué hábito se siente más fácil y cuál sigo negociando conmigo?','¿Qué hábito se sintió automático hoy?','¿Qué antojo apareció hoy y qué necesitaba en realidad?','¿Qué pasos pequeños me acercaron hoy a mi día ideal?','Escríbele unas líneas a tu cuerpo: ¿qué le agradeces?','¿Qué cambió entre el día 1 y hoy en mi fuerza, energía y ánimo?','¿Qué de mi versión mínima voy a conservar cuando la vida se complique?','Carta a mi yo de dentro de 3 meses: ¿qué quiero recordar y qué me prometo?'];
+const AF = [
+ ['Estoy empezando, y eso ya cuenta.','Hoy elijo un paso pequeño, y un paso pequeño es suficiente.','No necesito hacerlo perfecto para que valga la pena.','Mi cuerpo y yo estamos aprendiendo a trabajar en equipo.','Si hoy se complica, mi versión mínima también cuenta.','Me doy permiso de empezar suave.','No necesito ver todo el camino: confío en que puedo dar el siguiente paso.','No espero a sentirme con confianza para empezar: empiezo, y la confianza llega.','Aunque todavía no sepa cómo, me abro a lo que viene.','Suelto lo que ya pasó y me abro al presente.','Digo sí al paso que tengo enfrente.','Todo está bien, y todo se va acomodando para mi bien.'],
+ ['Mi cuerpo es capaz de más de lo que creo.','Cada vez que me muevo, me escucho y me cuido.','Elijo alimentos que me dan energía y que disfruto.','Puedo sentir incomodidad y seguir a mi ritmo.','Mi fuerza se construye día a día, aunque todavía no la vea.','Me hablo con paciencia, como le hablaría a alguien que quiero.','El miedo puede hablar, pero no decide por mí.','Cada paso pequeño es una prueba de que puedo cambiar.','Cumplo la palabra que me doy a mí.','Descanso cuando mi cuerpo lo necesita, y eso también es avanzar.','Avanzo sin forzarme y sin rendirme.','Me comprometo con el camino y suelto la tensión sobre el resultado.'],
+ ['Los hábitos que construyo se quedan conmigo.','Ya no empiezo de cero: parto de todo lo que he logrado.','Si me salgo del camino, sé cómo volver.','Elijo lo que me hace bien porque me importa cómo me siento.','Mi ritmo es mío, y lo puedo ajustar cuando lo necesite.','Me reconozco por todo lo que he hecho.','Cada decisión consciente me acerca a la persona que quiero ser.','Confío en mí y en el proceso.','Decido que la vida me apoya.','Merezco lo bueno que estoy construyendo y lo recibo con gusto.','No decido mi futuro desde el cansancio: descanso y vuelvo mañana.','Disfruto el camino sin esperar a que todo esté resuelto.','La vida está de mi lado, y yo me muevo con ella.']];
+const MIN = ['Un vaso de agua y 5 respiraciones lentas.','10 sentadillas y 10 puentes de glúteo.','Una caminata de 5 minutos, aunque sea dentro de casa.','Estiramiento de cuello, hombros y espalda, sentada o sentado.','Escuchar la afirmación de la semana.','Un plato base express: fruta con yogur, o un huevo cocido con verdura.','Respiración 4-6: inhala 4, exhala 6, cinco veces.','Tres planchas de 20 segundos, con descanso entre cada una.','Escribir una línea en el diario: “hoy me costó…”.','Dejar lista tu ropa y tu botella de agua para mañana.'];
+const RINGS = [['strength','Mover'],['base_plate','Nutrir'],['affirmations','Calmar'],['meditation','Dormir']];
+const CHK = [['strength','Mover (la sesión del día)'],['base_plate','Plato base'],['affirmations','Afirmaciones'],['meditation','Meditación de la noche'],['mini_challenge','Mini reto de la semana']];
+const GROUPS = [[['live'],'Clase en vivo'],[['affirmation'],'Audios de afirmaciones'],[['class'],'Clases grabadas'],[['meditation'],'Meditaciones nocturnas'],[['strength'],'Rutinas de fuerza'],[['guide','kit','tool'],'Guías y kit de herramientas']];
 
-let PREV=false, user, access=false, enrolled=false, items=[], jr={}, hb={}, sel=1, today=0, tab='hoy';
+let user, access=false, enrolled=false, items=[], jr={}, hb={}, sel=1, today=0, tab='hoy', PREV=false;
 const dayNum = () => Math.floor((Date.parse(new Date().toLocaleDateString('en-CA',{timeZone:TZ})) - Date.parse(START)) / 864e5) + 1;
+const done = r => r ? RINGS.filter(([k]) => r[k]).length : 0;
+const act = r => !!r && (r.joker || r.minimum || done(r) > 0 || r.mini_challenge);
+const wk = n => Math.floor((n-1)/7);
+const actDays = w => Object.keys(hb).filter(n => wk(+n)===w && act(hb[n])).length;
+function streak(){ let d = Math.min(today,21), n = 0; if (!act(hb[d])) d--; while (d>=1 && act(hb[d])) { n++; d--; } return n; }
+function best(){ let b=0, c=0; for (let d=1; d<=21; d++) { c = act(hb[d]) ? c+1 : 0; b = Math.max(b,c); } return b; }
+const jokers = () => Object.values(hb).filter(r => r.joker).length;
+const aud = u => /\.(mp3|m4a|wav|ogg)(\?|$)/i.test(u||'');
+const https = u => /^https:\/\//.test(u||'');
+const fmt = t => esc(t).split(/\n{2,}/).map(p => /^- /m.test(p) ? '<ul>' + p.split('\n').map(l => '<li>' + l.replace(/^- /,'') + '</li>').join('') + '</ul>' : '<p>' + p.replace(/\n/g,'<br>') + '</p>').join('').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+const link = x => `<div class="card"><b>${esc(x.title)}</b>${x.description ? `<br><span class="muted">${esc(x.description)}</span>` : ''}${https(x.url) && aud(x.url) ? `<audio controls preload="none" src="${esc(x.url)}"></audio>` : ''}${x.body ? `<details><summary>Leer</summary><div class="body">${fmt(x.body)}</div></details>` : ''}${https(x.url) && !aud(x.url) ? `<p><a class="btn" href="${esc(x.url)}" target="_blank" rel="noopener">${x.kind==='live'?'Unirme':'Abrir'}</a></p>` : ''}</div>`;
 
 $('tabs').innerHTML = [['hoy','Hoy'],['cont','Contenido'],['diario','Diario'],['prog','Progreso']].map(([t,n]) => `<button data-t="${t}">${n}</button>`).join('');
 $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.t; draw(); });
 $('out').onclick = async () => { await sb.auth.signOut(); start(); };
 
-const link = x => `<div class="card"><div class="row"><div><b>${esc(x.title)}</b>${x.description ? `<br><span class="muted">${esc(x.description)}</span>` : ''}</div>${/^https:\/\//.test(x.url||'') ? `<a class="btn" href="${esc(x.url)}" target="_blank" rel="noopener">${x.kind==='live'?'Unirme':'Abrir'}</a>` : ''}</div></div>`;
-
 function vHoy(){
   if (today < 1) { const n = 1 - today; return `<div class="card"><div class="big">${n}</div><div class="muted">${n===1?'día':'días'} para empezar</div><p>El reto arranca el lunes 4 de enero. Mientras tanto, revisa la pestaña Contenido.</p></div>`; }
-  const i = sel-1, w = Math.floor(i/7), d = i%7;
+  const i = sel-1, w = wk(sel), d = i%7;
+  const live = items.filter(x => x.kind==='live' && x.week===w+1), af = items.filter(x => x.kind==='affirmation' && x.week===w+1);
+  const nm = items.filter(x => x.kind==='meditation' && x.day===sel);
+  const extra = items.filter(x => x.day===sel && !['live','affirmation','meditation'].includes(x.kind));
+  const ph = [0,1,2].map(k => AF[w][(i*3+k) % AF[w].length]);
   const mover = FUERZA[d] + (sel===1 ? ' y test de fuerza' : sel===19 ? ' y retest de fuerza' : '');
-  const live = items.filter(x => x.kind==='live' && x.week===w+1), dia = items.filter(x => x.day===sel && x.kind!=='live');
-  return `<div class="card"><div class="muted">Semana ${w+1}: ${WEEKS[w]}</div><h2 style="margin:4px 0 12px">Día ${sel}</h2>
-    <p><b>Mover:</b> ${mover}</p><p><b>Yoga:</b> ${YOGA[w][d]}</p><p><b>Meditación:</b> ${MED[i]}</p><p><b>Foco:</b> ${FOCO[i]}</p><p><b>Mini reto:</b> ${MINI[w]}</p></div>`
-    + live.map(link).join('') + dia.map(link).join('')
-    + `<div class="card"><b>Pregunta del día</b><p class="muted">${PREG[i]}</p><button data-go="diario">Responder en mi diario</button></div>`;
+  return `<div class="card"><div class="row"><div><div class="muted">Semana ${w+1}: ${WEEKS[w]}</div><h2 style="margin:4px 0 0">Día ${sel}</h2></div><div class="chip on">Racha: ${streak()}</div></div></div>
+  <div class="card"><h3>Mañana</h3><p class="muted">Agua primero, tus afirmaciones en voz alta y tu movimiento.</p>
+    ${ph.map(p => `<div class="af">${p}</div>`).join('')}${af.map(x => link(x).replace('class="card"','style="margin-top:8px"')).join('')}
+    <p><b>Mover:</b> ${mover}</p><p><b>Yoga:</b> ${YOGA[w][d]}</p>
+    <p><b>Pregunta de la mañana:</b><br><span class="muted">${PM[i]}</span></p><button class="alt" data-go="diario">Responder en mi diario</button></div>
+  <div class="card"><h3>Durante el día</h3><p class="muted">Escucha tus afirmaciones 2 o 3 veces: trabajando, caminando o en el coche (con los ojos en el camino).</p>
+    <p><b>Foco:</b> ${FOCO[i]}</p><p><b>Mini reto:</b> ${MINI[w]}</p></div>
+  <div class="card"><h3>Noche</h3><p><b>Meditación:</b> ${MED[i]}</p>${nm.map(x => link(x).replace('class="card"','style="margin-top:8px"')).join('')}
+    <p><b>Ritual de sueño:</b> ${RITUAL[w]}. Puedes sumar yoga para dormir de 15 min.</p>
+    <p><b>Pregunta de la noche:</b><br><span class="muted">${PN[i]}</span></p><button class="alt" data-go="diario">Responder en mi diario</button></div>`
+  + live.map(link).join('') + extra.map(link).join('')
+  + `<div class="card"><b>¿Hoy te costó?</b><p class="muted">Hacer poco también es hacer, pero es un respaldo, no el plan A.</p><button class="alt" data-go="min">Hoy me costó</button></div>`;
+}
+function vMin(){
+  const r = hb[sel] || {}, w = wk(sel), used = Object.keys(hb).filter(n => wk(+n)===w && hb[n].minimum).length;
+  const blocked = !access || (used >= 2 && !r.minimum);
+  return `<div class="card"><h3>Hoy me costó</h3><p>Hay días que cuestan, y está bien. Elige una tarjeta y hazla completa, con cronómetro y sin negociar.</p>
+   <p class="muted">El modo mínimo se puede usar 2 veces por semana. Esta semana llevas ${used}. Cuenta para tu racha, pero no llena tus anillos. Al día siguiente vuelves al plan completo.</p>
+   <ol>${MIN.map(m => `<li>${m}</li>`).join('')}</ol>
+   <button id="mn" ${blocked?'disabled':''}>${r.minimum ? 'Quitar el modo mínimo de hoy' : 'Hice mi tarjeta completa'}</button>
+   ${blocked && !r.minimum && access ? '<p class="muted">Ya usaste tus 2 días mínimos de esta semana. Haz tu plan completo o usa un comodín.</p>' : ''}</div>
+   <button class="alt" data-go="hoy">Volver a Hoy</button>`;
 }
 function vCont(){
   const out = GROUPS.map(([ks,t]) => {
@@ -117,55 +176,75 @@ function vCont(){
     if (!l.length && ks[0]!=='strength') return '';
     return `<h2>${t}</h2>` + (l.length ? l.map(link).join('') : '<div class="card muted">Tus rutinas de fuerza están en AVENA. Ximena te avisará cómo entrar.</div>');
   }).join('');
-  return out.includes('class="card"><div class="row"') ? out : out + '<p class="muted">Aún no hay contenido liberado. Se abre por semana.</p>';
+  return items.length ? out : out + '<p class="muted">Aún no hay contenido liberado. Se abre por semana.</p>';
 }
 function vDia(){
-  const ro = !access;
-  return `<div class="card"><div class="muted">Día ${sel}</div><p style="font-size:18px;margin:6px 0 10px"><b>${PREG[sel-1]}</b></p>
-    <textarea id="ans" rows="8" ${ro?'disabled':''} placeholder="Escribe aquí. Es privado: solo tú lo ves en esta página.">${esc(jr[sel]||'')}</textarea>
-    ${ro ? '' : '<button id="sv">Guardar</button>'}</div>`;
+  const j = jr[sel] || {}, ro = !access;
+  const box = (m, t, q) => `<div class="card"><div class="muted">Día ${sel}: ${t}</div><p style="font-size:18px;margin:6px 0 10px"><b>${q}</b></p>
+    <textarea id="t-${m}" rows="6" ${ro?'disabled':''} placeholder="Escribe aquí. Es privado: solo tú lo ves en esta página.">${esc(j[m]||'')}</textarea>${ro ? '' : `<button data-sj="${m}">Guardar</button>`}</div>`;
+  return box('morning','mañana',PM[sel-1]) + box('night','noche',PN[sel-1]);
 }
+const ring = (on, t) => `<div class="rg ${on?'on':''}"><svg viewBox="0 0 60 60" aria-hidden="true"><circle class="bg" cx="30" cy="30" r="25"/><circle class="fg" cx="30" cy="30" r="25"/></svg><span>${t}${on?' ✓':''}</span></div>`;
 const opt = v => '<option value="">Elige</option>' + Array.from({length:10},(_,i) => `<option ${v===i+1?'selected':''}>${i+1}</option>`).join('');
 function vProg(){
-  const r = hb[sel]||{}, ro = !access, w = Math.floor((sel-1)/7);
-  const tot = k => Object.values(hb).filter(x => x[k]).length;
-  return `<div class="card"><div class="muted">Día ${sel}</div>`
-    + HAB.map(([k,t]) => `<label class="chk"><input type="checkbox" data-k="${k}" ${r[k]?'checked':''} ${ro?'disabled':''}>${k==='mini_challenge'?MINI[w]:t}</label>`).join('')
-    + `<label class="muted" for="sl">Horas de sueño</label><input id="sl" type="number" min="0" max="24" step="0.5" value="${r.sleep_hours ?? ''}" ${ro?'disabled':''}>
+  const r = hb[sel] || {}, ro = !access, w = wk(sel), jk = jokers(), tot = k => Object.values(hb).filter(x => x[k]).length;
+  const bg = [['Primer paso', act(r) || Object.keys(hb).some(n => act(hb[n]))]]
+    .concat([0,1,2].map(x => [`Semana ${x+1} completa`, actDays(x) >= 5]), [0,1,2].map(x => [`Mini reto S${x+1}`, Object.keys(hb).filter(n => wk(+n)===x && hb[n].mini_challenge).length >= 5]), [['Racha de 7', best() >= 7], ['Constancia (15 días)', Object.keys(hb).filter(n => act(hb[n])).length >= 15]]);
+  return `<div class="card"><div class="muted">Día ${sel}</div><div class="rings">${RINGS.map(([k,t]) => ring(r[k],t)).join('')}</div></div>
+   <div class="card">${CHK.map(([k,t]) => `<label class="chk"><input type="checkbox" data-k="${k}" ${r[k]?'checked':''} ${ro?'disabled':''}>${k==='mini_challenge'?MINI[w]:t}</label>`).join('')}
+    <label class="muted" for="sl">Horas de sueño</label><input id="sl" type="number" min="0" max="24" step="0.5" value="${r.sleep_hours ?? ''}" ${ro?'disabled':''}>
     <label class="muted" for="en">Energía (1 a 10)</label><select id="en" ${ro?'disabled':''}>${opt(r.energy)}</select>
     <label class="muted" for="mo">Ánimo (1 a 10)</label><select id="mo" ${ro?'disabled':''}>${opt(r.mood)}</select>
     ${ro ? '' : '<button id="sv" style="margin-top:12px">Guardar</button>'}</div>
-    <h2>Mi avance</h2><div class="card"><p>Días con registro: <b>${Object.keys(hb).length}</b> de 21</p>`
-    + HAB.map(([k,t]) => `<p class="muted" style="margin:4px 0">${k==='mini_challenge'?'Mini retos':t}: ${tot(k)} ${tot(k)===1?'día':'días'}</p>`).join('') + '</div>';
+   <h2>Mi avance</h2>
+   <div class="card"><div class="row"><div><div class="big">${streak()}</div><div class="muted">días de racha</div></div><div><div class="big">${Object.keys(hb).filter(n => act(hb[n])).length}</div><div class="muted">días activos de 21</div></div></div>
+    <p class="muted">El tapiz de arriba se va coloreando: más color, más hábitos cumplidos. Gris es modo mínimo y borde punteado es comodín.</p></div>
+   <div class="card"><b>Comodines</b><p class="muted">Tienes 3 para todo el reto. Un comodín mantiene tu racha cuando la vida se complica.</p>
+    <div class="chips">${[0,1,2].map(i => `<span class="chip ${i<jk?'on':''}">${i<jk?'usado':'disponible'}</span>`).join('')}</div>
+    ${ro ? '' : `<p><button class="alt" id="jk" ${jk>=3 && !r.joker ? 'disabled' : ''}>${r.joker ? 'Quitar comodín de este día' : 'Usar un comodín en este día'}</button></p>`}</div>
+   <div class="card"><b>Insignias</b><div class="chips" style="margin-top:8px">${bg.map(([t,on]) => `<span class="chip ${on?'on':''}">${t}</span>`).join('')}</div>
+    <p class="muted">Fuerza: ${tot('strength')} días · Plato base: ${tot('base_plate')} · Afirmaciones: ${tot('affirmations')} · Meditación: ${tot('meditation')} · Mini reto: ${tot('mini_challenge')}</p></div>`;
 }
 
-async function saveJ(){
-  const a = $('ans').value;
-  const {error} = await sb.from('journal_entries').upsert({user_id:user.id, program_id:PID, day:sel, answer:a, updated_at:new Date().toISOString()}, {onConflict:'user_id,program_id,day'});
-  if (error) return say('No se pudo guardar: ' + error.message);
-  jr[sel] = a; say('Guardado ✓'); drawDays();
+async function saveRow(p){
+  const before = hb[sel], wasDone = done(before), wasWeek = actDays(wk(sel));
+  const r = {...(before||{}), ...p, user_id:user.id, program_id:PID, day:sel, updated_at:new Date().toISOString()};
+  const {error} = await sb.from('habit_logs').upsert(r, {onConflict:'user_id,program_id,day'});
+  if (error) { say('No se pudo guardar: ' + error.message); return false; }
+  hb[sel] = r; say('Guardado ✓');
+  if (done(r)===4 && wasDone<4) celebrate('¡Día completo!');
+  else if (actDays(wk(sel))>=5 && wasWeek<5) celebrate('¡Semana completa!');
+  draw(); return true;
 }
-async function saveH(){
-  const row = {user_id:user.id, program_id:PID, day:sel, updated_at:new Date().toISOString(),
-    sleep_hours: $('sl').value==='' ? null : +$('sl').value, energy: +$('en').value || null, mood: +$('mo').value || null};
-  HAB.forEach(([k]) => row[k] = document.querySelector(`[data-k="${k}"]`).checked);
-  const {error} = await sb.from('habit_logs').upsert(row, {onConflict:'user_id,program_id,day'});
+async function saveJ(m){
+  const a = $('t-'+m).value;
+  const {error} = await sb.from('journal_entries').upsert({user_id:user.id, program_id:PID, day:sel, moment:m, answer:a, updated_at:new Date().toISOString()}, {onConflict:'user_id,program_id,day,moment'});
   if (error) return say('No se pudo guardar: ' + error.message);
-  hb[sel] = row; say('Guardado ✓'); draw();
+  (jr[sel] = jr[sel] || {})[m] = a; say('Guardado ✓'); drawDays();
 }
 
 function drawDays(){
   $('days').classList.toggle('hidden', tab==='cont');
+  const cls = n => { const r = hb[n]; if (!r) return ''; if (r.joker) return 'lj'; if (r.minimum) return 'lm'; const k = done(r); return k ? 'l'+k : ''; };
   $('days').innerHTML = Array.from({length:21}, (_,i) => { const n = i+1;
-    return `<button data-d="${n}" class="${n===sel?'on':''} ${jr[n]||hb[n]?'has':''}" ${n>today?'disabled':''} aria-label="Día ${n}">${n}</button>`; }).join('');
+    return `<button data-d="${n}" class="${n===sel?'on':''} ${cls(n)}" ${n>today?'disabled':''} aria-label="Día ${n}">${n}</button>`; }).join('');
   $('days').querySelectorAll('button').forEach(b => b.onclick = () => { sel = +b.dataset.d; draw(); });
 }
 function draw(){
   $('tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t===tab));
   drawDays();
-  $('v').innerHTML = (PREV ? '<div class="card"><b>Vista previa de administradora</b><br><span class="muted">Ves los 21 días y todo el contenido desbloqueado. Las participantes lo verán semana por semana.</span></div>' : '') + (access ? '' : '<div class="card">Tu acceso terminó. Puedes leer lo que escribiste, pero ya no editarlo.</div>') + {hoy:vHoy, cont:vCont, diario:vDia, prog:vProg}[tab]();
-  if ($('sv')) $('sv').onclick = tab==='diario' ? saveJ : saveH;
+  $('v').innerHTML = (PREV ? '<div class="card"><b>Vista previa de administradora</b><br><span class="muted">Ves los 21 días y todo el contenido desbloqueado. Las participantes lo verán semana por semana.</span></div>' : '')
+    + (access ? '' : '<div class="card">Tu acceso terminó. Puedes leer lo que escribiste, pero ya no editarlo.</div>')
+    + {hoy:vHoy, min:vMin, cont:vCont, diario:vDia, prog:vProg}[tab]();
   document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { tab = b.dataset.go; draw(); });
+  document.querySelectorAll('[data-sj]').forEach(b => b.onclick = () => saveJ(b.dataset.sj));
+  if ($('mn')) $('mn').onclick = async () => { const r = hb[sel] || {}; if (await saveRow({minimum: !r.minimum})) { tab = 'hoy'; draw(); } };
+  if ($('jk')) $('jk').onclick = () => saveRow({joker: !(hb[sel]||{}).joker});
+  if ($('sv')) $('sv').onclick = () => {
+    const p = {sleep_hours: $('sl').value==='' ? null : +$('sl').value, energy: +$('en').value || null, mood: +$('mo').value || null};
+    CHK.forEach(([k]) => p[k] = document.querySelector(`[data-k="${k}"]`).checked);
+    saveRow(p);
+  };
 }
 
 async function start(){ try { await run(); } catch(e) { console.error(e); say('Error al cargar: ' + (e.message || e)); } }
@@ -177,14 +256,14 @@ async function run(){
     sb.rpc('has_access', {p_program:PID}), sb.rpc('is_admin'),
     sb.from('enrollments').select('status').eq('user_id', user.id).eq('program_id', PID).maybeSingle(),
     sb.from('content_items').select('*').eq('program_id', PID).order('day', {nullsFirst:true}).order('sort'),
-    sb.from('journal_entries').select('day,answer').eq('program_id', PID),
+    sb.from('journal_entries').select('day,moment,answer').eq('program_id', PID),
     sb.from('habit_logs').select('*').eq('program_id', PID),
     sb.from('profiles').select('name').maybeSingle()]);
   if (ci.error) return say('No se pudo cargar el contenido: ' + ci.error.message);
+  if (jo.error) say('Falta actualizar la base de datos (actualizacion-1.sql): ' + jo.error.message);
   access = ac.data===true || adm.data===true; enrolled = !!en.data;
   items = ci.data || []; jr = {}; hb = {};
-  (jo.data||[]).forEach(r => jr[r.day] = r.answer); (hl.data||[]).forEach(r => hb[r.day] = r);
-  // Vista previa: solo para administradoras, con reto.html?preview=1
+  (jo.data||[]).forEach(r => (jr[r.day] = jr[r.day] || {})[r.moment] = r.answer); (hl.data||[]).forEach(r => hb[r.day] = r);
   PREV = adm.data===true && new URLSearchParams(location.search).get('preview')==='1';
   today = PREV ? 21 : dayNum(); sel = PREV ? 1 : (today < 1 ? 1 : Math.min(today, 21));
   $('hello').textContent = 'Hola, ' + (pf.data?.name || user.email);
